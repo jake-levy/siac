@@ -18,8 +18,8 @@ key_theta, key_amp, key_freq = jax.random.split(key, 3)
 theta_star = jax.random.uniform(key_theta, minval=0, maxval=1, shape=(m, n))
 
 # Generate a sinusoidal input
-amps = jax.random.uniform(key_amp, minval=0.1, maxval=1, shape=(n,))
-freqs = jax.random.uniform(key_freq, minval=0.1, maxval=1, shape=(n,))
+amps = jax.random.uniform(key_amp, minval=0.1, maxval=1, shape=(n, 1))
+freqs = jax.random.uniform(key_freq, minval=0.1, maxval=1, shape=(n, 1))
 us = sinusoidal(amps, freqs, T, dt)
 
 # Generate the output

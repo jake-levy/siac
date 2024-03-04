@@ -9,8 +9,9 @@ import matplotlib.pyplot as plt
 # Parameters
 T = 100
 dt = 0.01
-input_amp = 1
-input_freq = 1
+step_amp = jp.array([10])
+input_amp = jp.array([[1, 2]])
+input_freq = jp.array([[1, 2]])
 
 # Ground truth
 m = 20
@@ -24,14 +25,14 @@ C = jp.array([[1, 0]])
 
 # Generate data
 x_init = jp.zeros((2,))
-us = 10 + inputs.sinusoidal(input_amp, input_freq, T, dt)
-us = jp.expand_dims(us, axis=1)
+step_input = inputs.step(step_amp, T, dt)
+sine_input = inputs.sinusoidal(input_amp, input_freq, T, dt)
+us = step_input + sine_input
 ys = integrate.euler_LTI(A, B, C, us, x_init, dt)
 fig, ax = plt.subplots()
-# ax.plot(us)
+ax.plot(us)
 ax.plot(ys)
 plt.savefig("out.png")
-
 
 # Hyperparameters
 lam = jp.array([1, 1])  # LP filter
@@ -39,6 +40,7 @@ gamma = 1 * jp.eye(1)  # Learning rate
 a_hat_init = jp.zeros((2,))
 b_hat_init = jp.zeros((2,))
 
+# Perform estimation (assuming m is known)
 a_hat, a_hats = siso.estimate_a(us, ys, a_hat_init, b, gamma, lam, dt)
 print(a_hat*m)
 fig, ax = plt.subplots()
@@ -46,6 +48,7 @@ ax.plot(a_hats[:, 0]*m)
 ax.plot(a_hats[:, 1]*m)
 plt.savefig("est.png")
 
+# # Perform estimation (assuming m is unknown)
 # theta_hat, theta_hats = siso.estimate_ab(us, ys, a_hat_init, b_hat_init, gamma, lam, dt)
 # print(a)
 # print(b)
