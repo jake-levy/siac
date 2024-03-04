@@ -5,16 +5,16 @@ from siac.utils import transforms
 from siac.utils import integrate
 import matplotlib.pyplot as plt
 import jax
+jax.config.update("jax_enable_x64", True)
+jax.config.update('jax_platform_name', 'cpu')
 
 
 # Parameters
-T = 1000
-dt = 0.01
-num_freqs = 4
-input_amps = jp.ones((1, num_freqs))
-key = jax.random.PRNGKey(0)
-input_freqs = jax.random.uniform(key, minval=1, maxval=10,
-                                 shape=(1, num_freqs))
+T = 5000
+dt = 0.001
+num_freqs = 6
+input_amps = 1 * jp.ones((1, num_freqs))
+input_freqs = jp.expand_dims(jp.linspace(0.01, 0.2, num_freqs), axis=0)
 
 # Ground truth
 m = 20
@@ -35,18 +35,19 @@ ax.plot(ys[:, 0])
 ax.plot(ys[:, 1])
 plt.savefig("out.png")
 
-# Hyperparameters
-gamma_a = 1
-gamma_b = 1
+# Perform estimation (parallel model)
+gamma_a = .1
+gamma_b = .01
 A_hat_init = jp.zeros((2, 2))
 B_hat_init = jp.zeros((2, 1))
-
-# Perform estimation
 x_hat, A_hat, B_hat, x_hats, A_hats, B_hats = dynamic.parallel(
     us, ys, A_hat_init, B_hat_init, gamma_a, gamma_b, dt)
+print("================ Parallel ================")
+print("Gound truth:")
 print(A)
-print(A_hat)
 print(B)
+print("Estimated:")
+print(A_hat)
 print(B_hat)
 fig, ax = plt.subplots()
 ax.plot(ys[:, 0])
@@ -62,3 +63,33 @@ fig, ax = plt.subplots()
 ax.plot(B_hats[:, 0, 0])
 ax.plot(B_hats[:, 1, 0])
 plt.savefig("B.png")
+
+# Perform estimation (series-parallel model)
+Gamma_a = 10 * jp.eye(2)
+Gamma_b = 10 * jp.eye(2)
+A_m = -1 * jp.eye(2)
+A_hat_init = jp.zeros((2, 2))
+B_hat_init = jp.zeros((2, 1))
+x_hat, A_hat, B_hat, x_hats, A_hats, B_hats = dynamic.series_parallel(
+    us, ys, A_hat_init, B_hat_init, A_m, Gamma_a, Gamma_b, dt)
+print("================ Series-Parallel ================")
+print("Gound truth:")
+print(A)
+print(B)
+print("Estimated:")
+print(A_hat)
+print(B_hat)
+fig, ax = plt.subplots()
+ax.plot(ys[:, 0])
+ax.plot(x_hats[:, 0])
+plt.savefig("xs_sp.png")
+fig, ax = plt.subplots()
+ax.plot(A_hats[:, 0, 0])
+ax.plot(A_hats[:, 0, 1])
+ax.plot(A_hats[:, 1, 0])
+ax.plot(A_hats[:, 1, 1])
+plt.savefig("A_sp.png")
+fig, ax = plt.subplots()
+ax.plot(B_hats[:, 0, 0])
+ax.plot(B_hats[:, 1, 0])
+plt.savefig("B_sp.png")
